@@ -1,23 +1,10 @@
 (deffacts init
-	; Current color assigned to face-orientation (Front,Right,Left,Back,Down,Up)
-	(Color D W)
-	(Color U Y)
+	; Front = Red, Right = Green, Left = Blue, Back = Orange, Down = White, Up = Yellow)
+	; 	Y
+	; B R G O
+	;	W
 	
-	(Color F R)
-	(Color R G)
-	(Color L B)
-	(Color B O)
-	
-	;(NeighboursRL <current> <right-neighbour> <left-neighbour>)
-	(NeighboursRL R G B)
-	(NeighboursRL G O R)
-	(NeighboursRL O B G)
-	(NeighboursRL B R O)
-	
-	; left -> right, up -> down
-	; 1st 3 : F, 2nd 3 : R, 3rd 3 : B, 4th 3 : L
-	; (White-Face-Adjacent R R R G G G O O O B B B)
-	
+	; Representation of Face tiles: left -> right, up -> down
 	;White Face is Done 
 	(Face W W W W W W W W W)
 	(Face O Y O O Y O G Y B)
@@ -27,10 +14,13 @@
 	(Face G R B R O B O O O)
 	(Face Y Y Y O B R B B B)
 	
-	(Up-Layer F11 F12 F13 R11 R12 R13 B11 B12 B13 L11 L12 L13)
-	(Down-Layer F31 F32 F33 R31 R32 R33 B31 B32 B33 L31 L32 L33)
-	
+	(move 4 U)
+	(move 1 U)
+	(move 2 R)
+	(move 3 Ui)
+		
 	; add scop cu nr reprezentand pasii in ordine
+	; salience of executing moves needs to be higher than the one for adding moves
 )
 
 (defglobal ?*move* = 1)
@@ -40,10 +30,8 @@
 	;Middle Layer not done
 	(exists (Face ? ? ? ?e1 ?fixed&~Y ?e2&~?e1|~?fixed $?)) 
 	;Edge piece that doesn't contain yellow
-	(Color F ?fixed-front)
-	(Face ? ?fixed-front&~Y ? ? ?fixed-front $?)
-	(Face ? ? ? ? Y ? ? ?edge-up&~Y ?)
-	(NeighboursRL ?fixed-front ?edge-up ?)
+	(Face ? R ? ? R $?)
+	(Face ? ? ? ? Y ? ? G ?)
 	=>
 	(printout t "Middle layer not done. MOVE FRONT-EDGE TO THE RiGHT. " crlf)
 )
@@ -51,10 +39,8 @@
 	;Middle Layer not done
 	(exists (Face ? ? ? ?e1 ?fixed&~Y ?e2&~?e1|~?fixed $?)) 
 	;Edge piece that doesn't contain yellow
-	(Color R ?fixed)
-	(Face ? ?fixed&~Y ? ? ?fixed $?)
-	(Face ? ? ? ? Y ?edge-up&~Y ? ? ?)
-	(NeighboursRL ?fixed ?edge-up ?)
+	(Face ? G ? ? G $?)
+	(Face ? ? ? ? Y O $?)
 	=>
 	(printout t "Middle layer not done. MOVE RIGHT-EDGE TO THE RiGHT. " crlf)
 )
@@ -62,10 +48,8 @@
 	;Middle Layer not done
 	(exists (Face ? ? ? ?e1 ?fixed&~Y ?e2&~?e1|~?fixed $?)) 
 	;Edge piece that doesn't contain yellow
-	(Color B ?fixed)
-	(Face ? ?fixed&~Y ? ? ?fixed $?)
-	(Face ? ?edge-up&~Y ? ? Y ? ? ? ?)
-	(NeighboursRL ?fixed ?edge-up ?)
+	(Face ? O ? ? O $?)
+	(Face ? B ? ? Y $?)
 	=>
 	(printout t "Middle layer not done. MOVE BACK-EDGE TO THE RiGHT. " crlf)
 )
@@ -73,10 +57,8 @@
 	;Middle Layer not done
 	(exists (Face ? ? ? ?e1 ?fixed&~Y ?e2&~?e1|~?fixed $?)) 
 	;Edge piece that doesn't contain yellow
-	(Color L ?fixed)
-	(Face ? ?fixed&~Y ? ? ?fixed $?)
-	(Face ? ? ? ?edge-up&~Y Y ? ? ? ?)
-	(NeighboursRL ?fixed ?edge-up ?)
+	(Face ? B ? ? B $?)
+	(Face ? ? ? R Y $?)
 	=>
 	(printout t "Middle layer not done. MOVE LEFT-EDGE TO THE RiGHT. " crlf)
 )
@@ -104,7 +86,7 @@
 ; U rotation
 (defrule U-move
 	?m<-(move ?nr U)
-	(not (move ?n:<?nr ?))
+	(forall (move ?n ~U)(test (> ?n ?nr)))
 	?U<-(Face ?U11 ?U12 ?U13 ?U21 Y ?U23 ?U31 ?U32 ?U33)
 	?F<-(Face ?F11 ?F12 ?F13 ?F21 R $?rest-front)
 	?R<-(Face ?R11 ?R12 ?R13 ?R21 G $?rest-right)
@@ -126,7 +108,7 @@
 ; U inverse
 (defrule Ui-move
 	?m<-(move ?nr Ui)
-	(not (move ?n:<?nr ?))
+	(forall (move ?n ~Ui)(test (> ?n ?nr)))
 	?U<-(Face ?U11 ?U12 ?U13 ?U21 Y ?U23 ?U31 ?U32 ?U33)
 	?F<-(Face ?F11 ?F12 ?F13 ?F21 R $?rest-front)
 	?R<-(Face ?R11 ?R12 ?R13 ?R21 G $?rest-right)
@@ -145,8 +127,27 @@
 	(printout t "Moving U inverse." crlf)	
 )
 
+; R move
+(defrule R-move
+	?m<-(move ?nr R)
+	(forall (move ?n ~R)(test (> ?n ?nr)))
+	?U<-(Face ?U11 ?U12 ?U13 ?U21 Y ?U23 ?U31 ?U32 ?U33)
+	?F<-(Face ?F11 ?F12 ?F13 ?F21 R ?F23 ?F31 ?F32 ?F33)
+	?R<-(Face ?R11 ?R12 ?R13 ?R21 G ?R23 ?R31 ?R32 ?R33)
+	?B<-(Face ?B11 ?B12 ?B13 ?B21 O ?B23 ?B31 ?B32 ?B33)
+	?D<-(Face ?D11 ?D12 ?D13 ?D21 W ?D23 ?D31 ?D32 ?D33)
+	=>
+	(retract ?m ?U ?F ?R ?B ?D)
+	(assert
+		(Face ?R31 ?R21 ?R11 ?R32 G ?R12 ?R33 ?R23 ?R13)
+		(Face ?F11 ?F12 ?D13 ?F21 R ?D23 ?F31 ?F32 ?D33)		
+		(Face ?U11 ?U12 ?F13 ?U21 Y ?F23 ?U31 ?U32 ?F33)		
+		(Face ?U33 ?B12 ?B13 ?U23 O ?B23 ?U13 ?B32 ?B33)		
+		(Face ?D11 ?D12 ?B31 ?D21 W ?B21 ?D31 ?D32 ?B11)	
+	)
+	(printout t "Moving R." crlf)	
+)
 
-
-
-
+; R inverse
+; (Face ?R13 ?R23 ?R33 ?R12 G ?R32 ?R11 ?R21 ?R31)
 
