@@ -29,34 +29,28 @@
 (defrule move-right-edge-piece-F-face
 	;Middle Layer not done
 	(exists (Face ? ? ? ?e1 ?fixed&~Y ?e2&~?e1|~?fixed $?)) 
-	;Edge piece that doesn't contain yellow
+	;Edge piece that doesn't contain yellow and needs to be moved to the right
 	(Face ? R ? ? R $?)
 	(Face ? ? ? ? Y ? ? G ?)
 	=>
 	(printout t "Middle layer not done. MOVE FRONT-EDGE TO THE RiGHT. " crlf)
 )
 (defrule move-right-edge-piece-R-face
-	;Middle Layer not done
 	(exists (Face ? ? ? ?e1 ?fixed&~Y ?e2&~?e1|~?fixed $?)) 
-	;Edge piece that doesn't contain yellow
 	(Face ? G ? ? G $?)
 	(Face ? ? ? ? Y O $?)
 	=>
 	(printout t "Middle layer not done. MOVE RIGHT-EDGE TO THE RiGHT. " crlf)
 )
 (defrule move-right-edge-piece-B-face
-	;Middle Layer not done
 	(exists (Face ? ? ? ?e1 ?fixed&~Y ?e2&~?e1|~?fixed $?)) 
-	;Edge piece that doesn't contain yellow
 	(Face ? O ? ? O $?)
 	(Face ? B ? ? Y $?)
 	=>
 	(printout t "Middle layer not done. MOVE BACK-EDGE TO THE RiGHT. " crlf)
 )
 (defrule move-right-edge-piece-L-face
-	;Middle Layer not done
 	(exists (Face ? ? ? ?e1 ?fixed&~Y ?e2&~?e1|~?fixed $?)) 
-	;Edge piece that doesn't contain yellow
 	(Face ? B ? ? B $?)
 	(Face ? ? ? R Y $?)
 	=>
@@ -64,11 +58,9 @@
 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defrule all-edge-pieces-contain-yellow ;(declare (salience 10)) ; salience bigger than for moving edge piece to the right or left
-	;Middle Layer not done
+(defrule all-edge-pieces-contain-yellow 
 	(exists (Face ? ? ? ?e1 ?fixed&~Y ?e2&~?e1|~?fixed $?)) 
 	(Face ? ?O-peer ? ?B-peer Y ?G-peer ? ?R-peer ?)
-	;(test (or)()()())
 	=>
 	(printout t "Middle layer not done. " crlf)
 )
@@ -149,5 +141,21 @@
 )
 
 ; R inverse
+(defrule R-move
+	?m<-(move ?nr R)
+	(forall (move ?n ~R)(test (> ?n ?nr)))
+	?U<-(Face ?U11 ?U12 ?U13 ?U21 Y ?U23 ?U31 ?U32 ?U33)
+	?F<-(Face ?F11 ?F12 ?F13 ?F21 R ?F23 ?F31 ?F32 ?F33)
+	?R<-(Face ?R11 ?R12 ?R13 ?R21 G ?R23 ?R31 ?R32 ?R33)
+	?B<-(Face ?B11 ?B12 ?B13 ?B21 O ?B23 ?B31 ?B32 ?B33)
+	?D<-(Face ?D11 ?D12 ?D13 ?D21 W ?D23 ?D31 ?D32 ?D33)
+	=>
+	(retract ?m ?U ?F ?R ?B ?D)
+	(assert
+		(Face ?R13 ?R23 ?R33 ?R12 G ?R32 ?R11 ?R21 ?R31)
+			
+	)
+	(printout t "Moving R." crlf)	
+)
 ; (Face ?R13 ?R23 ?R33 ?R12 G ?R32 ?R11 ?R21 ?R31)
 
